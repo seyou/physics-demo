@@ -7,7 +7,7 @@ G = 9.81        # 중력가속도 (m/s^2)
 L = 1.0         # 막대 길이 (m)
 M_CART = 1.0    # 카트 질량 (kg)
 M_POLE = 1.0    # 추 질량 (kg)
-DT = 0.005       # 시간 간격 (s)
+DT = 0.005      # 시간 간격 (s)
 
 initial_com = None
 max_error = 0.0
@@ -42,7 +42,7 @@ def step(x, v, theta, omega):
 # 가속도가 속도를 바꾸고, 속도가 위치를 바꾼다.
 
 # --- 초기 상태: 5도 기울인 채 가만히 놓는다 ---
-state = (0.0, 0.0, math.radians(1), 0.0)
+state = (0.0, 0.0, math.radians(5), 0.0)
 
 
 # --- 이 아래는 그림 그리는 부분. 물리와 무관 ---
