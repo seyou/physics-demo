@@ -19,6 +19,9 @@ DT = 0.005      # 시간 간격 (s)
 
 # --- 직립 근방을 맡을 게인. 5주차 결과를 그대로 가져온다 ---
 KX, KV, K, KD = lqr_gains(100, 10, 1, 1, 1)
+K_SWING = 10
+K_CENTER_X = 60
+K_CENTER_V = 60
 
 
 # TODO 1: 지금 이 순간 막대가 가진 에너지를 돌려준다.
@@ -27,12 +30,11 @@ KX, KV, K, KD = lqr_gains(100, 10, 1, 1, 1)
 #         운동방정식을 다시 유도해 2주차 뉴턴 결과와 대조한다.
 #         기준점은 자유롭게 잡아도 되지만, 어디로 잡았는지는 TODO 2 와 맞아야 한다.
 def energy(theta, omega):
-    return 0.0
-
+    return (0.5 * M_POLE * (L * omega)**2) + (M_POLE * G * (L * math.cos(theta)))
 
 # TODO 2: 막대가 똑바로 섰을 때의 에너지.
 #         TODO 1 의 식에 theta=0, omega=0 을 넣은 값이다. 목표선이다.
-E_UP = 0.0
+E_UP = 98.1
 
 
 # TODO 3: 올리는 힘.
@@ -41,8 +43,7 @@ E_UP = 0.0
 #         막대에 에너지가 "들어가는가". 그네를 밀어본 기억이 답에 가깝고,
 #         식에서는 막대가 도는 방향(omega)이 그걸 알려준다.
 def swing_force(x, v, theta, omega):
-    return 0.0
-
+    return (omega * math.cos(theta) *  (energy(theta, omega) - E_UP) * K_SWING) - (K_CENTER_X * x + K_CENTER_V * v)
 
 # TODO 4: 언제 LQR 에게 넘길 것인가.
 #         너무 일찍 넘기면 소각도 밖이라 LQR 이 못 잡고,
@@ -52,13 +53,13 @@ def swing_force(x, v, theta, omega):
 #         주의: theta 는 계속 돌기 때문에 370도, 730도처럼 한없이 커진다.
 #         "0도 근처인가" 를 그냥 비교하면 두 바퀴째부터 안 걸린다.
 def is_near_upright(theta, omega):
-    return False
-
+    # return False
+    return math.cos(theta) > 0.9 and abs(omega) < 1.5
 
 def control(x, v, theta, omega):
     """올리는 힘과 잡는 힘 중 하나를 고른다."""
     if is_near_upright(theta, omega):
-        return KX * x + KV * v + K * theta + KD * omega
+        return KX * x + KV * v + K * ((theta + math.pi) % (2 * math.pi) - math.pi) + KD * omega
     return swing_force(x, v, theta, omega)
 
 
@@ -84,7 +85,7 @@ def step(x, v, theta, omega):
 
 
 # --- 초기 상태: 막대가 아래로 늘어진 채 가만히 있다 ---
-state = (0.0, 0.0, math.pi, 0.0)
+state = (0.0, 0.0, math.pi, 0.01)
 
 
 # --- 이 아래는 그림 그리는 부분. 물리와 무관 ---
